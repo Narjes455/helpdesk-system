@@ -15,8 +15,16 @@ st.set_page_config(page_title="نظام تذاكر الدعم الفني", page_
 
 @st.cache_resource
 def _setup() -> bool:
-    """تهيئة قاعدة البيانات مرة واحدة عند بدء التطبيق."""
+    """تهيئة قاعدة البيانات، وتعبئتها ببيانات تجريبية إن كانت فارغة."""
+    from database.connection import query_one
+
     init_database()
+    try:
+        if not query_one("SELECT id FROM users LIMIT 1"):
+            from database.seed import seed
+            seed()
+    except Exception as exc:
+        print("تعذّر تعبئة البيانات التجريبية:", exc)
     return True
 
 
