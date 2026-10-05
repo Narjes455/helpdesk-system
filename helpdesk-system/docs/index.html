@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>نظام تذاكر الدعم الفني</title>
+<meta name="description" content="نظام ويب لإدارة تذاكر الدعم الفني: أولويات مرتبطة بمدة حل محددة، سجل إجراءات كامل، وتقارير أداء.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#16242E;
+    --ink-soft:#52646F;
+    --paper:#F6F7F5;
+    --card:#FFFFFF;
+    --line:#D9DFDD;
+    --ok:#0F7D6B;
+    --warn:#C98A12;
+    --late:#B23A32;
+    --hair:1px solid var(--line);
+    --maxw:1060px;
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0}
+
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto} }
+
+  body{
+    font-family:"IBM Plex Sans Arabic",system-ui,sans-serif;
+    background:var(--paper);
+    color:var(--ink);
+    line-height:1.75;
+    font-size:17px;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  .wrap{max-width:var(--maxw);margin-inline:auto;padding-inline:24px}
+
+  section{padding-block:72px;border-top:var(--hair)}
+  section:first-of-type{border-top:none}
+
+  h1,h2,h3{line-height:1.35;font-weight:600;letter-spacing:-.01em}
+  h2{font-size:1.65rem;margin-bottom:8px}
+  .lede{color:var(--ink-soft);max-width:62ch;margin-bottom:32px}
+
+  /* ---------- الترويسة ---------- */
+  header{padding-block:28px}
+  .bar{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  .mark{display:flex;align-items:center;gap:10px;font-weight:600}
+  .mark span.dot{
+    width:11px;height:11px;border-radius:50%;background:var(--ok);
+    box-shadow:0 0 0 4px rgba(15,125,107,.14);
+  }
+  nav{display:flex;gap:22px;font-size:.92rem;color:var(--ink-soft)}
+  nav a{color:inherit;text-decoration:none;padding-block:4px;border-bottom:2px solid transparent}
+  nav a:hover,nav a:focus-visible{color:var(--ink);border-bottom-color:var(--ok)}
+
+  /* ---------- البطل ---------- */
+  .hero{display:grid;grid-template-columns:1.05fr .95fr;gap:56px;align-items:center;padding-block:56px 80px}
+  .hero h1{font-size:clamp(2rem,4.6vw,3.1rem);font-weight:700;margin-bottom:18px}
+  .hero p{color:var(--ink-soft);max-width:48ch;margin-bottom:28px}
+
+  .cta{display:flex;gap:12px;flex-wrap:wrap}
+  .btn{
+    display:inline-block;padding:13px 26px;border-radius:4px;
+    text-decoration:none;font-weight:500;font-size:.97rem;border:1.5px solid var(--ink);
+  }
+  .btn-solid{background:var(--ink);color:var(--paper)}
+  .btn-solid:hover{background:#0C1920}
+  .btn-ghost{color:var(--ink);background:transparent}
+  .btn-ghost:hover{background:rgba(22,36,46,.06)}
+  .btn:focus-visible{outline:3px solid var(--ok);outline-offset:3px}
+
+  /* ---------- قصاصة التذكرة ---------- */
+  .stub{
+    background:var(--card);
+    border:var(--hair);
+    border-radius:6px;
+    position:relative;
+    box-shadow:0 1px 0 rgba(22,36,46,.04);
+  }
+  .stub::before,.stub::after{
+    content:"";position:absolute;width:20px;height:20px;border-radius:50%;
+    background:var(--paper);border:var(--hair);
+  }
+  .stub::before{top:-11px;right:28px}
+  .stub::after{top:-11px;left:28px}
+
+  .stub-head{
+    display:flex;justify-content:space-between;align-items:baseline;gap:12px;
+    padding:26px 24px 14px;border-bottom:1px dashed var(--line);
+  }
+  .tid{font-family:"IBM Plex Mono",monospace;font-size:.9rem;color:var(--ink-soft)}
+  .chip{
+    font-size:.78rem;padding:3px 11px;border-radius:999px;
+    background:rgba(201,138,18,.12);color:var(--warn);font-weight:500;
+  }
+  .stub-body{padding:18px 24px 24px}
+  .stub-body h3{font-size:1.1rem;margin-bottom:6px}
+  .stub-body .who{font-size:.88rem;color:var(--ink-soft);margin-bottom:22px}
+
+  .meter-row{display:flex;justify-content:space-between;font-size:.82rem;color:var(--ink-soft);margin-bottom:7px}
+  .meter{height:7px;background:#E8ECEA;border-radius:999px;overflow:hidden}
+  .meter i{display:block;height:100%;width:0;background:var(--ok);border-radius:999px;transition:width 1.4s cubic-bezier(.2,.7,.3,1)}
+  .meter.is-late i{background:var(--late)}
+  @media (prefers-reduced-motion: reduce){ .meter i{transition:none} }
+
+  .trail{margin-top:22px;padding-top:18px;border-top:var(--hair);font-size:.86rem}
+  .trail li{list-style:none;display:flex;gap:10px;padding-block:5px;color:var(--ink-soft)}
+  .trail li b{color:var(--ink);font-weight:500}
+  .trail time{font-family:"IBM Plex Mono",monospace;font-size:.78rem;opacity:.75;flex-shrink:0}
+
+  /* ---------- مسار الحالات ---------- */
+  .flow{display:flex;gap:0;flex-wrap:wrap;margin-top:8px}
+  .step{
+    flex:1 1 150px;padding:18px 16px;background:var(--card);
+    border:var(--hair);border-inline-start:none;
+  }
+  .step:first-child{border-inline-start:var(--hair);border-start-start-radius:6px;border-end-start-radius:6px}
+  .step:last-child{border-start-end-radius:6px;border-end-end-radius:6px;background:#F0F4F2}
+  .step .n{font-family:"IBM Plex Mono",monospace;font-size:.76rem;color:var(--ink-soft)}
+  .step .s{font-weight:500;margin-top:4px}
+
+  /* ---------- جدول المدد ---------- */
+  table{width:100%;border-collapse:collapse;background:var(--card);border:var(--hair);border-radius:6px;overflow:hidden}
+  th,td{padding:14px 18px;text-align:right;border-bottom:var(--hair);font-size:.95rem}
+  th{font-weight:500;color:var(--ink-soft);background:#F0F2F1}
+  tr:last-child td{border-bottom:none}
+  td.dur{font-family:"IBM Plex Mono",monospace}
+  .pri{display:inline-flex;align-items:center;gap:8px}
+  .pri::before{content:"";width:8px;height:8px;border-radius:2px;background:currentColor}
+  .p-crit{color:var(--late)} .p-high{color:#C96A12} .p-med{color:var(--warn)} .p-low{color:var(--ok)}
+
+  /* ---------- الأدوار ---------- */
+  .roles{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+  .role{background:var(--card);border:var(--hair);border-radius:6px;padding:24px}
+  .role h3{font-size:1.05rem;margin-bottom:10px;padding-bottom:10px;border-bottom:2px solid var(--ok)}
+  .role ul{list-style:none;font-size:.92rem;color:var(--ink-soft)}
+  .role li{padding-block:5px}
+  .role li::before{content:"—";margin-left:8px;opacity:.5}
+
+  /* ---------- المؤشرات ---------- */
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:var(--hair);border-radius:6px;overflow:hidden}
+  .kpi{background:var(--card);padding:22px 18px}
+  .kpi b{display:block;font-size:1.5rem;font-weight:600;font-family:"IBM Plex Mono",monospace}
+  .kpi span{font-size:.86rem;color:var(--ink-soft)}
+
+  /* ---------- التقنيات ---------- */
+  .stack{display:flex;flex-wrap:wrap;gap:10px}
+  .stack li{list-style:none;padding:7px 16px;border:var(--hair);border-radius:999px;background:var(--card);font-size:.9rem}
+
+  /* ---------- الخاتمة ---------- */
+  .end{text-align:center;padding-block:80px}
+  .end h2{margin-bottom:10px}
+  .end .cta{justify-content:center;margin-top:26px}
+
+  footer{border-top:var(--hair);padding-block:28px;font-size:.86rem;color:var(--ink-soft)}
+  footer a{color:var(--ink)}
+
+  @media (max-width:860px){
+    .hero{grid-template-columns:1fr;gap:40px;padding-block:32px 56px}
+    .roles{grid-template-columns:1fr}
+    .kpis{grid-template-columns:repeat(2,1fr)}
+    nav{display:none}
+    section{padding-block:56px}
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div class="bar">
+      <div class="mark"><span class="dot"></span> نظام تذاكر الدعم الفني</div>
+      <nav>
+        <a href="#how">كيف يعمل</a>
+        <a href="#sla">مدد الحل</a>
+        <a href="#roles">الصلاحيات</a>
+        <a href="#tech">التقنيات</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- البطل -->
+  <div class="hero">
+    <div>
+      <h1>كل عطل يصير تذكرة، وكل تذكرة لها وقت محدد للحل</h1>
+      <p>نظام ويب يستقبل أعطال الموظفين، يوجّهها للفني المناسب، ويقيس التزام فريق الدعم بمدة الحل المتفق عليها لكل أولوية.</p>
+      <div class="cta">
+        <a class="btn btn-solid" href="https://YOUR-APP.streamlit.app">تجربة النظام مباشرة</a>
+        <a class="btn btn-ghost" href="https://github.com/Narjes455/helpdesk-system">الكود على GitHub</a>
+      </div>
+    </div>
+
+    <!-- قصاصة تذكرة حقيقية من النظام -->
+    <div class="stub">
+      <div class="stub-head">
+        <span class="tid">#2048</span>
+        <span class="chip">قيد المعالجة</span>
+      </div>
+      <div class="stub-body">
+        <h3>انقطاع الإنترنت بالدور الثاني</h3>
+        <p class="who">فتحها: موظف المحاسبة · الفني المسؤول: فني الدعم الأول</p>
+
+        <div class="meter-row"><span>أولوية حرجة · مهلة ساعتان</span><span>مضى ١٠٥ دقائق</span></div>
+        <div class="meter"><i data-fill="87%"></i></div>
+
+        <ul class="trail">
+          <li><time>09:12</time> <span><b>فتح التذكرة</b> — الشبكة متقطعة منذ الصباح</span></li>
+          <li><time>09:26</time> <span><b>استلام التذكرة</b> — بدأت المعالجة</span></li>
+          <li><time>10:40</time> <span><b>ملاحظة</b> — تم استبدال كيبل المبدّل، جارٍ الاختبار</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- كيف يعمل -->
+  <section id="how">
+    <h2>مسار التذكرة</h2>
+    <p class="lede">تنتقل التذكرة بين خمس حالات، وكل انتقال يُسجَّل باسم من نفّذه ووقته وملاحظته — فيبقى تاريخ العطل كاملًا بعد إغلاقه.</p>
+    <div class="flow">
+      <div class="step"><div class="n">١</div><div class="s">جديدة</div></div>
+      <div class="step"><div class="n">٢</div><div class="s">قيد المراجعة</div></div>
+      <div class="step"><div class="n">٣</div><div class="s">قيد المعالجة</div></div>
+      <div class="step"><div class="n">٤</div><div class="s">بانتظار المستخدم</div></div>
+      <div class="step"><div class="n">٥</div><div class="s">مغلقة</div></div>
+    </div>
+  </section>
+
+  <!-- المدد -->
+  <section id="sla">
+    <h2>مدد الحل حسب الأولوية</h2>
+    <p class="lede">عند فتح التذكرة يحسب النظام موعدها النهائي تلقائيًا، ويرصد المتأخرة قبل أن تتفاقم. تعديل الأولوية يعيد حساب الموعد فورًا.</p>
+    <table>
+      <thead><tr><th>الأولوية</th><th>المدة المستهدفة</th><th>أمثلة</th></tr></thead>
+      <tbody>
+        <tr><td><span class="pri p-crit">حرجة</span></td><td class="dur">ساعتان</td><td>انقطاع شبكة عن قسم كامل</td></tr>
+        <tr><td><span class="pri p-high">عالية</span></td><td class="dur">٤ ساعات</td><td>تعطل جهاز موظف</td></tr>
+        <tr><td><span class="pri p-med">متوسطة</span></td><td class="dur">٨ ساعات</td><td>طلب تركيب برنامج</td></tr>
+        <tr><td><span class="pri p-low">منخفضة</span></td><td class="dur">٢٤ ساعة</td><td>طلب صلاحية على مجلد</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- الأدوار -->
+  <section id="roles">
+    <h2>من يرى ماذا</h2>
+    <p class="lede">ثلاثة أدوار، كل واحد يرى ما يخصه فقط.</p>
+    <div class="roles">
+      <div class="role">
+        <h3>موظف</h3>
+        <ul>
+          <li>يفتح تذكرة بعطل أو طلب</li>
+          <li>يتابع تذاكره هو فقط</li>
+          <li>يرى الإجراءات المتخذة عليها</li>
+        </ul>
+      </div>
+      <div class="role">
+        <h3>فني دعم</h3>
+        <ul>
+          <li>يستلم التذاكر المسندة إليه</li>
+          <li>يغيّر الحالة ويكتب ملاحظة</li>
+          <li>يغلق التذكرة بعد الحل</li>
+        </ul>
+      </div>
+      <div class="role">
+        <h3>مدير</h3>
+        <ul>
+          <li>يرى كل التذاكر ويعدّل أولوياتها</li>
+          <li>يوزّع العمل على الفنيين</li>
+          <li>يطّلع على التقارير ويدير الحسابات</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- التقارير -->
+  <section id="reports">
+    <h2>ما الذي تقيسه الإدارة</h2>
+    <p class="lede">التقارير تحوّل التذاكر إلى أرقام تُبنى عليها قرارات: أين يتأخر الفريق، ومن يحتاج دعمًا، وأي عطل يتكرر فيستحق حلًا جذريًا.</p>
+    <div class="kpis">
+      <div class="kpi"><b>١.٨ س</b><span>متوسط وقت الاستجابة</span></div>
+      <div class="kpi"><b>٥.٤ س</b><span>متوسط وقت الإغلاق</span></div>
+      <div class="kpi"><b>٨٤٪</b><span>الالتزام بالمدة</span></div>
+      <div class="kpi"><b>٢٣</b><span>تذاكر مفتوحة</span></div>
+    </div>
+  </section>
+
+  <!-- التقنيات -->
+  <section id="tech">
+    <h2>كيف بُني</h2>
+    <p class="lede">النظام يعمل على قاعدة بيانات محلية أثناء التطوير، وينتقل إلى قاعدة سحابية في التشغيل بتغيير متغيّر بيئة واحد — دون تعديل أي سطر في الكود.</p>
+    <ul class="stack">
+      <li>Python</li>
+      <li>Streamlit</li>
+      <li>SQLite</li>
+      <li>PostgreSQL</li>
+      <li>pandas</li>
+      <li>PBKDF2 لتشفير كلمات المرور</li>
+      <li>واجهة عربية بالكامل</li>
+    </ul>
+  </section>
+
+  <!-- الخاتمة -->
+  <section class="end">
+    <h2>جرّبه بنفسك</h2>
+    <p class="lede" style="margin-inline:auto">النسخة التجريبية محمّلة ببيانات وهمية. ادخل بحساب المدير لترى كل الصفحات.</p>
+    <div class="cta">
+      <a class="btn btn-solid" href="https://YOUR-APP.streamlit.app">فتح النسخة التجريبية</a>
+      <a class="btn btn-ghost" href="https://github.com/Narjes455/helpdesk-system">قراءة الكود</a>
+    </div>
+  </section>
+</div>
+
+<footer>
+  <div class="wrap">
+    مشروع مفتوح المصدر برخصة MIT — <a href="https://github.com/Narjes455/helpdesk-system">helpdesk-system</a>
+  </div>
+</footer>
+
+<script>
+  // لحظة واحدة متحركة: تعبئة شريط المهلة عند ظهور الصفحة
+  window.addEventListener('load', function () {
+    var bar = document.querySelector('.meter i');
+    if (!bar) return;
+    var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var target = bar.dataset.fill;
+    if (reduce) { bar.style.width = target; return; }
+    setTimeout(function () { bar.style.width = target; }, 350);
+  });
+</script>
+
+</body>
+</html>
